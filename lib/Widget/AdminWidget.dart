@@ -78,7 +78,6 @@ class EmployeeDialog extends StatelessWidget {
 // ======================================== ABSEN CARD ========================================
 // ======================================== ABSEN CARD ========================================
 Widget buildAbsenCard(Absen data, Function(Absen) onTap) {
-  bool isLate = _checkIfLate(data.timestamp ?? '');
   Color statusColor = _getStatusColor(data.status ?? '');
   // Format the timestamp to "yyyy-MM-dd HH:mm:ss"
   print(data.idPegawai!.name.toString());
@@ -90,13 +89,18 @@ Widget buildAbsenCard(Absen data, Function(Absen) onTap) {
 
   return InkWell(
     onTap: () {
+      print('masuk on tap========================================');
+      print(data);
       onTap(data);
     },
     child: Card(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
         leading: CircleAvatar(
-          child: Icon(Icons.person),
+          backgroundImage: Image.network(
+            'http://192.168.178.135:3000/uploads/' + data.images.toString(),
+            fit: BoxFit.cover,
+          ).image,
         ),
         title: Text(
           data.idPegawai!.name.toString(),
@@ -106,7 +110,7 @@ Widget buildAbsenCard(Absen data, Function(Absen) onTap) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(formattedTimestamp),
-            Text('Status: ${isLate ? 'Terlambat' : 'Tepat Waktu'}'),
+            Text('Status: ${data.keterangan}'),
           ],
         ),
         trailing: Text(

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import '../State/ProviderAbsen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:absensi/Screen/Admin/AdminListAbsen.dart';
 import 'package:absensi/Screen/Admin/AdminFormAddPegawai.dart';
-
+// ... (Your imports)
 
 class HomePage extends StatefulWidget {
   final int? index;
@@ -49,6 +53,14 @@ class _HomePageState extends State<HomePage> {
           color: Colors.white,
         ),
       ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.refresh),
+          onPressed: () {
+            Provider.of<ProviderAbsen>(context, listen: false).getAbsen();
+          },
+        ),
+      ],
       iconTheme: IconThemeData(
         color: Colors.white,
       ),
@@ -64,9 +76,9 @@ class _HomePageState extends State<HomePage> {
               padding: EdgeInsets.zero,
               children: <Widget>[
                 buildDrawerHeader(),
-                buildListTile('Absen', Icons.person, 0),
-                buildListTile('Add Pegawai', Icons.add, 1),
-                buildListTile('Logout', Icons.logout, 1),
+                buildListTile('Absen', Icons.person, () => _changeIndex(0)),
+                buildListTile('Add Pegawai', Icons.add, () => _changeIndex(1)),
+                buildListTile('Logout', Icons.logout, logout),
               ],
             ),
           ),
@@ -78,15 +90,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  ListTile buildListTile(String title, IconData icon, int index) {
+  ListTile buildListTile(String title, IconData icon, void Function() onTap) {
     return ListTile(
       title: Text(title),
       leading: Icon(icon),
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
+      onTap: onTap,
     );
   }
 
@@ -143,25 +151,18 @@ class _HomePageState extends State<HomePage> {
       style: TextStyle(color: Colors.grey[600]),
     );
   }
-}
 
-// Example Screen Widgets
-class Screen1 extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Screen 1 Content'),
-    );
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('email');
+    prefs.remove('pw');
+    Navigator.of(context)
+        .pushReplacementNamed('/loginPage'); // Navigate to login screen
+  }
+
+  void _changeIndex(int newIndex) {
+    setState(() {
+      _currentIndex = newIndex;
+    });
   }
 }
-
-class Screen2 extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Screen 2 Content'),
-    );
-  }
-}
-
-

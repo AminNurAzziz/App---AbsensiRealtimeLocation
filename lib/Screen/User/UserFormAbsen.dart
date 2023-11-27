@@ -7,6 +7,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:provider/provider.dart';
 import 'package:absensi/State/ProviderAbsen.dart';
 
@@ -27,11 +30,11 @@ class FormAbsen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.exit_to_app),
             color: Colors.white,
-            onPressed: () {
-              print('Logout');
-              // Implement your logout logic here
-              // For example, you might navigate to the login screen
-              // Navigator.pushReplacementNamed(context, '/login');
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              prefs.remove('email');
+              prefs.remove('pw');
+              Navigator.of(context).pushReplacementNamed('/loginPage');
             },
           ),
         ],
@@ -48,8 +51,8 @@ class AbsensiForm extends StatefulWidget {
 
 class _AbsensiFormState extends State<AbsensiForm> {
   String _selectedStatus = 'Masuk';
-  double _latitude = -6.200000;
-  double _longitude = 106.816666;
+  double? _latitude = 0;
+  double? _longitude = 0;
   XFile? _image;
   Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
   GlobalKey _mapKey = GlobalKey();
@@ -234,13 +237,13 @@ class _AbsensiFormState extends State<AbsensiForm> {
           }
         },
         initialCameraPosition: CameraPosition(
-          target: LatLng(_latitude, _longitude),
+          target: LatLng(_latitude ?? 0, _longitude ?? 0),
           zoom: 15.0,
         ),
         markers: {
           Marker(
             markerId: MarkerId("currentLocation"),
-            position: LatLng(_latitude, _longitude),
+            position: LatLng(_latitude ?? 0, _longitude ?? 0),
             infoWindow: InfoWindow(title: "Current Location"),
           ),
         },
@@ -317,36 +320,76 @@ class _AbsensiFormState extends State<AbsensiForm> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      // Check if both latitude and longitude are available
+      if (_latitude == null || _longitude == null) {
+        // Show an error message or handle the case where location is not available
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Location is not available. Please try again.'),
+          ),
+        );
+        return;
+      }
 
-      // Create an Absen object with the form data
-      Absen absen = Absen(
-        idPegawai: Employee(
-            id: "656324e53054724edf887fed"), // Replace with the actual employee data
-        status: _selectedStatus,
-        images: 'path/to/image.jpg', // Replace with the actual image path
-        lat: _latitude.toString(),
-        long: _longitude.toString(),
+      // Membuat request multipart
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(
+            'http://192.168.178.135:3000/absen'), // Ganti dengan URL endpoint Anda
       );
 
-      // Get the ProviderAbsen instance using the context within the widget tree
-      ProviderAbsen providerAbsen =
-          Provider.of<ProviderAbsen>(context, listen: false);
+      // Menambahkan gambar sebagai file multipart
+      if (_image != null) {
+        request.files
+            .add(await http.MultipartFile.fromPath('gambar', _image!.path));
+      }
 
-      // Call the addAbsen function to send the data to your backend
-      await providerAbsen.addAbsen(absen);
+      final prefs = await SharedPreferences.getInstance();
+      final id = prefs.getString('id');
+      print(id);
+      // Menambahkan data lain sebagai fields
+      request.fields['idPegawai'] = id!;
+      request.fields['status'] = _selectedStatus;
+      request.fields['lat'] = _latitude.toString();
+      request.fields['long'] = _longitude.toString();
 
-      // Reset the form
-      _formKey.currentState!.reset();
-      setState(() {
-        _image = null;
-      });
+      try {
+        // Mengirim request
+        var response = await request.send();
+        print(response.statusCode);
 
-      // Optionally show a success message or navigate to another screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Form submitted successfully!'),
-        ),
-      );
+        // Menangani respons
+        if (response.statusCode == 201) {
+          // Reset form setelah berhasil
+          _formKey.currentState!.reset();
+          setState(() {
+            _image = null;
+            _buildMap(key: _formKey);
+          });
+
+          // Tampilkan pesan sukses
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Form submitted successfully!'),
+            ),
+          );
+        } else {
+          // Tampilkan pesan kesalahan jika respons tidak berhasil
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error submitting form. Please try again.'),
+            ),
+          );
+        }
+      } catch (e) {
+        // Tangani kesalahan yang mungkin terjadi saat mengirim request
+        print("Error submitting form: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting form. Please try again.'),
+          ),
+        );
+      }
     }
   }
 

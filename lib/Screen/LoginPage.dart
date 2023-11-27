@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:absensi/Models/ModelUser.dart';
+import 'package:absensi/Services/ServicesUser.dart';
+import 'package:absensi/Models/ModelAbsen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,64 +17,72 @@ class _LoginPageState extends State<LoginPage> {
   bool rememberMe = false;
   bool isPasswordVisible = false;
 
-  TextEditingController usernameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  // Future<void> login() async {
-  //   User user = User(
-  //     username: usernameController.text,
-  //     password: passwordController.text,
-  //   );
+  Future<void> login() async {
+    User user = User(
+      email: emailController.text,
+      password: passwordController.text,
+    );
 
-  //   try {
-  //     final result = await ServiceUser().login(user);
+    try {
+      final result = await ServiceUser().login(user);
 
-  //     if (result['success']) {
-  //       final token = result['data']["loginResult"]["token"];
-  //       // Provider.of<ProviderAuth>(context, listen: false).setToken(token);
-  //       _showSuccessDialog();
-  //     } else {
-  //       _showErrorDialog(result['errorMessage']);
-  //     }
-  //   } catch (e) {
-  //     _showErrorDialog(e.toString());
-  //   }
-  // }
+      if (result['success'] == true) {
+        WidgetsFlutterBinding.ensureInitialized();
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('id', result['data']['user']['id']);
+        prefs.setString('email', emailController.text);
+        prefs.setString('pw', passwordController.text);
 
-  // void _showErrorDialog(String message) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Error'),
-  //       content: Text(message),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: const Text('OK'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+        _showSuccessDialog(result);
+      } else {
+        _showErrorDialog(result['errorMessage']);
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    }
+  }
 
-  // void _showSuccessDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Success'),
-  //       content: const Text('Login successful!'),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Navigator.pop(context);
-  //             Navigator.pushReplacementNamed(context, '/homePage');
-  //           },
-  //           child: const Text('OK'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(Map result) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Success'),
+        content: const Text('Login successful!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (result['data']['user']['role'] == 'Admin') {
+                Navigator.pushReplacementNamed(context, '/homePage');
+              } else {
+                Navigator.pushReplacementNamed(context, '/formAbsen');
+              }
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           _buildWelcomeText(),
           SizedBox.fromSize(size: Size(0, 20)),
-          _buildUsernameField(),
+          _buildemailField(),
           SizedBox(height: 20),
           _buildPasswordField(),
           SizedBox(height: 20),
@@ -176,19 +189,19 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildUsernameField() {
+  Widget _buildemailField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Username',
+          'email',
           style: TextStyle(
             fontSize: 18,
             color: const Color.fromARGB(255, 71, 73, 77),
           ),
         ),
         TextField(
-          controller: usernameController,
+          controller: emailController,
           decoration: InputDecoration(
             suffixIcon: Icon(Icons.check),
             suffixIconConstraints: BoxConstraints(
@@ -264,10 +277,7 @@ class _LoginPageState extends State<LoginPage> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        // onPressed: login,
-        onPressed: () {
-          // Navigator.pushReplacementNamed(context, '/homePage');
-        },
+        onPressed: login,
         child: Text(
           'Login',
           style: TextStyle(
