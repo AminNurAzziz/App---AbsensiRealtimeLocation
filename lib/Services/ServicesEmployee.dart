@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:absensi/Models/ModelEmployee.dart';
 
 class ServicesEmployee {
-  static const baseUrl = "http://192.168.178.135:3000";
+  static const baseUrl = "http://<your_IP_Device>:3000";
 
   Future<void> addEmployee(Employee employee) async {
     try {
