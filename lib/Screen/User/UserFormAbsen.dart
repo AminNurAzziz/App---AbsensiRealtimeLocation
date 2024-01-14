@@ -164,6 +164,7 @@ class _AbsensiFormState extends State<AbsensiForm> {
             _buildChoiceChip('Masuk'),
             _buildChoiceChip('Istirahat'),
             _buildChoiceChip('Kembali'),
+            _buildChoiceChip('Pulang'),
           ],
         ),
         SizedBox(height: 8),

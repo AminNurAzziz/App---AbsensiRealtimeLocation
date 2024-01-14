@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-       <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="absensi"
         android:name="${applicationName}"
@@ -10,7 +10,8 @@
 
                         <meta-data
         android:name="com.google.android.geo.API_KEY"
-        android:value="AIzaSyDg9Mx1rgtg7kKAfjNI9m1PKPyXxJcBASM"/>
+        android:value="AIzaSyCArOA9fayK1_JTsvNay3cauuxSUBTHOaAssds"/>
+        <!-- android:value="AIzaSyDg9Mx1rgtg7kKAfjNI9m1PKPyXxJcBASM"/> -->
         
         <activity
             android:name=".MainActivity"

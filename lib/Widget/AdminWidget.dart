@@ -38,9 +38,6 @@ class EmployeeDialog extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               String password = _generateRandomPassword();
-              print(
-                  "masuk add employee+++++++++++++++++++++++++++++++++++++++");
-              print(password);
               Employee editedEmployee = Employee(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
                 name: _nameController.text,

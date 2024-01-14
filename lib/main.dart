@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => loginStatus == null
               ? LoginPage()
-              : role == "Pegawai"
+              : role == "Admin"
                   ? FormAbsen()
                   : HomePage(),
           '/homePage': (context) => HomePage(),
