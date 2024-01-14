@@ -5,7 +5,7 @@ import 'package:absensi/Models/ModelUser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServiceUser {
-  static const baseUrl = "http://192.168.178.135:3000";
+  static const baseUrl = "http://<your_IP_Device>:3000";
 
   Future<Map<String, dynamic>> login(User user) async {
     print(user.email);
